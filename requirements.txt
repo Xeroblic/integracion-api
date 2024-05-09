@@ -1,2 +1,4 @@
 django
-djangorestframework
+django_rest_framework 
+mysqlclient
+django-cors-headers

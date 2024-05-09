@@ -20,8 +20,6 @@ from rest_framework import generics
 
 
 # Create your views here.
-
-
 class userViewSet(viewsets.ModelViewSet):
     queryset = UsuarioPersonalizado.objects.all()
     serializer_class = UserSerializer
