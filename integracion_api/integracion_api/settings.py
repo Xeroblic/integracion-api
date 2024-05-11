@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'integracion_api',
     'core',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -57,6 +58,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'integracion_api.urls'
+
+APPEND_SLASH=False
 
 TEMPLATES = [
     {
@@ -131,7 +134,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
     ],
     
 }

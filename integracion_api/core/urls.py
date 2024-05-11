@@ -5,7 +5,13 @@ from core.serializers import *
 
 router = routers.DefaultRouter()
 router.register('usuario', userViewSet)
+router.register('tipo_usuario', tipoUsuarioViewSet)
+router.register('producto', productoViewSet)
+router.register('pedido', pedidoViewSet)
+router.register('detalle_pedido', detallePedidoViewSet)
+router.register('estado', estadoViewSet)
 
 urlpatterns = [
-    #path('', include(router.urls)),
+    path('', include(router.urls)),
+    path('get-token/', ObtainTokenView.as_view(), name='get-token'),
 ]
