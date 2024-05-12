@@ -72,7 +72,6 @@ class DetallePedidoSerializer(serializers.ModelSerializer):
         model = DetallePedido
         fields = '__all__'
     
-
 class DetallePedidoPostSerializer(serializers.ModelSerializer):
     cantidad = serializers.IntegerField(required=True)
     
@@ -113,9 +112,55 @@ class DetallePedidoPostSerializer(serializers.ModelSerializer):
         pedido.save()
 
         return detalle_pedido
-
-        
-class ProductoCarritoSerializer(serializers.ModelSerializer):
+       
+class MetodoPagoSerializer(serializers.ModelSerializer):
     class Meta:
-        model = DetallePedido
-        fields = ['producto', 'cantidad']
+        model = MetodoPago
+        fields = '__all__'
+
+class MetodoPagoPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MetodoPago
+        fields = ['nombre']
+
+class EstadoPagoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EstadoPago
+        fields = '__all__'
+
+class EstadoPagoPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EstadoPago
+        fields = ['nombre']
+
+class PagoSerializer(serializers.ModelSerializer):
+    pedido = PedidoSerializer()
+    metodo_pago = MetodoPagoSerializer()
+    estado_pago = EstadoPagoSerializer()
+    
+    class Meta:
+        model = Pago
+        fields = '__all__'
+
+class PagoPostSerializer(serializers.ModelSerializer):
+    fecha = serializers.DateField(required=True)
+    
+    class Meta:
+        model = Pago
+        fields = ['pedido', 'fecha', 'metodo_pago', 'estado_pago']
+
+class TransaccionSerializer(serializers.ModelSerializer):
+    pedido = PedidoSerializer()
+    cliente = UserSerializer()
+    pago = PagoSerializer()
+    
+    class Meta:
+        model = Transaccion
+        fields = '__all__'
+
+class TransaccionPostSerializer(serializers.ModelSerializer):
+    fecha = serializers.DateField(required=True)
+    
+    class Meta:
+        model = Transaccion
+        fields = ['pedido', 'cliente', 'pago', 'fecha']

@@ -49,7 +49,7 @@ class Pedido(models.Model):
     subtotal = models.IntegerField(null=True)
     iva = models.IntegerField(null=True)
     total = models.IntegerField(null=True)
-    fecha = models.DateField(auto_now_add=True, null=False)
+    fecha = models.DateField(null=False)
     estado = models.ForeignKey(Estado, on_delete=models.CASCADE, null=False)
 
 class DetallePedido(models.Model):

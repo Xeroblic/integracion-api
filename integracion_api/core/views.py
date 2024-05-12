@@ -14,7 +14,8 @@ from base64 import b64decode
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework import generics
-
+from django.utils import timezone
+from django.db.models import Sum, Count
 
 #obtener token si un usuario existe, si no le crea uno
 class ObtainTokenView(APIView):
@@ -108,3 +109,110 @@ class PedidoDetailView(generics.RetrieveAPIView):
             'pedido': serializer.data,
             'detalles_pedido': detalles_serializer.data
         })
+
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+class metodoViewSet(viewsets.ModelViewSet):
+    queryset = MetodoPago.objects.all()
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return MetodoPagoPostSerializer
+        return MetodoPagoSerializer
+
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+class estadoPagoViewSet(viewsets.ModelViewSet):
+    queryset = EstadoPago.objects.all()
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return EstadoPagoPostSerializer
+        return EstadoPagoSerializer
+    
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+class pagoViewSet(viewsets.ModelViewSet):
+    queryset = Pago.objects.all()
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return PagoPostSerializer
+        return PagoSerializer
+
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+class transaccionViewSet(viewsets.ModelViewSet):
+    queryset = Transaccion.objects.all()
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return TransaccionPostSerializer
+        return TransaccionSerializer
+
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+class ReporteBodegaView(generics.ListAPIView):
+    """
+    Vista para obtener todos los pedidos del mes actual y el total de ventas del mes.
+    """
+    serializer_class = PedidoSerializer
+
+    def get_queryset(self):
+        first_day_of_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        return Pedido.objects.filter(fecha__gte=first_day_of_month)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Serializar los pedidos
+        serializer = self.get_serializer(queryset, many=True)
+
+        # Calcular el total de ventas del mes
+        total_ventas_mes = queryset.aggregate(Sum('total'))['total__sum']
+
+        return Response({
+            'pedidos': serializer.data,
+            'total_ventas_mes': total_ventas_mes
+        })
+
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+class ProductosMasVendidosView(generics.ListAPIView):
+    """
+    Vista para obtener los productos más vendidos del mes actual.
+    """
+    serializer_class = ProductoSerializer
+
+    def get_queryset(self):
+        first_day_of_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        detalles_pedido = DetallePedido.objects.filter(pedido__fecha__gte=first_day_of_month)
+
+        # Obtener los productos más vendidos del mes actual
+        productos_mas_vendidos = detalles_pedido.values('producto').annotate(veces_vendido=Count('producto'), total_productos_vendidos=Sum('cantidad')).order_by('-veces_vendido')
+
+        # Obtener los IDs de los productos más vendidos y las veces que se vendieron
+        productos_mas_vendidos_info = [{'id_producto': item['producto'], 'veces_vendido': item['veces_vendido'], 'total_productos_vendidos': item['total_productos_vendidos']} for item in productos_mas_vendidos]
+
+        # Devolver la información de los productos más vendidos
+        return productos_mas_vendidos_info
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Serializar los productos
+        productos_serializados = []
+        for producto_info in queryset:
+            producto = Producto.objects.get(id_producto=producto_info['id_producto'])
+            serializer = self.get_serializer(producto)
+            producto_serializado = serializer.data
+            producto_serializado['veces_vendido'] = producto_info['veces_vendido']
+            producto_serializado['total_productos_vendidos'] = producto_info['total_productos_vendidos']
+            productos_serializados.append(producto_serializado)
+
+        return Response({
+            'productos_mas_vendidos_este_mes': productos_serializados
+        })
+        
