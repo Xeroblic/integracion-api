@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -16,6 +17,8 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework import generics
 from django.utils import timezone
 from django.db.models import Sum, Count
+from django.shortcuts import redirect
+from .transbank import iniciar_transaccion, obtener_resultado, obtener_estado
 
 #obtener token si un usuario existe, si no le crea uno
 class ObtainTokenView(APIView):
@@ -215,4 +218,22 @@ class ProductosMasVendidosView(generics.ListAPIView):
         return Response({
             'productos_mas_vendidos_este_mes': productos_serializados
         })
-        
+
+
+def iniciar_pago(request):
+    monto = 10000  # Aquí debes poner el monto que deseas cobrar
+    metodo_pago = "webpay"  # Aquí debes poner el método de pago que deseas usar
+    response = iniciar_transaccion(monto, metodo_pago)
+    if 'url' in response:
+        return redirect(response["url"])
+    else:
+        return HttpResponse("Error al iniciar la transacción: " + response.get('error_message', 'No se proporcionó ningún mensaje de error'))
+
+def retorno(request):
+    token = request.GET.get("token_ws")
+    resultado = obtener_resultado(token)
+    estado = obtener_estado(token)
+    # Aquí puedes procesar el resultado y el estado como desees
+    return HttpResponse("Transacción completada")
+
+

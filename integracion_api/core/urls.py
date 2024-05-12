@@ -22,5 +22,6 @@ urlpatterns = [
     path('reporte_bodega/', ReporteBodegaView.as_view(), name='reporte_bodega'),
     path('reporte_productos_vendidos/', ProductosMasVendidosView.as_view(), name='reporte_productos_vendidos'),
     #TODO: Agregar los endpoints para la generación de reportes
-    
+    path('iniciar_pago/', iniciar_pago, name='iniciar_pago'),
+    path('retorno/', retorno, name='retorno'),
 ]
