@@ -13,6 +13,7 @@ from rest_framework.authtoken.models import Token
 from base64 import b64decode
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import authentication_classes, permission_classes
+from rest_framework import generics
 
 
 #obtener token si un usuario existe, si no le crea uno
@@ -89,3 +90,21 @@ class estadoViewSet(viewsets.ModelViewSet):
         if self.request.method == 'POST':
             return EstadoPostSerializer
         return EstadoSerializer
+
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+class PedidoDetailView(generics.RetrieveAPIView):
+    queryset = Pedido.objects.all()
+    serializer_class = PedidoSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+
+        detalles_pedido = DetallePedido.objects.filter(pedido=instance)
+        detalles_serializer = DetallePedidoSerializer(detalles_pedido, many=True)
+
+        return Response({
+            'pedido': serializer.data,
+            'detalles_pedido': detalles_serializer.data
+        })
