@@ -22,7 +22,6 @@ from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, timedelta
 
 
-
 #obtener token si un usuario existe, si no le crea uno
 class ObtainTokenView(APIView):
     def get(self, request, *args, **kwargs):
