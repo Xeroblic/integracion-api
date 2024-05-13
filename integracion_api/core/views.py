@@ -1,5 +1,5 @@
 import random
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
 from django.urls import reverse
 import requests
@@ -19,9 +19,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework import generics
 from django.utils import timezone
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
 from django.views.decorators.csrf import csrf_exempt
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 
@@ -142,47 +142,57 @@ class estadoPagoViewSet(viewsets.ModelViewSet):
 @permission_classes([IsAuthenticated])
 class pagoViewSet(viewsets.ModelViewSet):
     queryset = Pago.objects.all()
+    serializer_class = PagoSerializer
     
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return PagoPostSerializer
-        return PagoSerializer
-
+    @property
+    def allowed_methods(self):
+        return ['GET']
+   
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 class transaccionViewSet(viewsets.ModelViewSet):
     queryset = Transaccion.objects.all()
+    serializer_class = TransaccionSerializer
     
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return TransaccionPostSerializer
-        return TransaccionSerializer
+    @property
+    def allowed_methods(self):
+        return ['GET']
 
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
-class ReporteBodegaView(generics.ListAPIView):
+class informeVentaMensual(generics.ListAPIView):
     """
     Vista para obtener todos los pedidos del mes actual y el total de ventas del mes.
     """
-    serializer_class = PedidoSerializer
+    serializer_class = TransaccionSerializer
+    
+    @property
+    def allowed_methods(self):
+        return ['GET']
 
     def get_queryset(self):
-        first_day_of_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month = self.kwargs.get('month')
+        if not 1 <= int(month) <= 12:
+            raise Http404("El mes proporcionado no es válido.")
+        
+        first_day_of_month = timezone.now().replace(month=int(month), day=1, hour=0, minute=0, second=0, microsecond=0)
+        last_day_of_month = (first_day_of_month + timedelta(days=31)).replace(day=1) - timedelta(days=1)
 
-        return Pedido.objects.filter(fecha__gte=first_day_of_month)
+        return Transaccion.objects.filter(Q(pago__estado_pago__id_estado_pago=0) & Q(pedido__fecha__gte=first_day_of_month) & Q(pedido__fecha__lte=last_day_of_month))
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
 
-        # Serializar los pedidos
+        # Serializar las transacciones
         serializer = self.get_serializer(queryset, many=True)
 
         # Calcular el total de ventas del mes
-        total_ventas_mes = queryset.aggregate(Sum('total'))['total__sum']
+        total_ventas_mes = queryset.aggregate(Sum('pedido__total'))['pedido__total__sum']
 
         return Response({
-            'pedidos': serializer.data,
-            'total_ventas_mes': total_ventas_mes
+            'mes': f'Mes {self.kwargs.get("month")} del {timezone.now().year}',
+            'total_ventas_mes': total_ventas_mes,
+            'transacciones': serializer.data
         })
 
 @authentication_classes([TokenAuthentication])
@@ -192,6 +202,10 @@ class ProductosMasVendidosView(generics.ListAPIView):
     Vista para obtener los productos más vendidos del mes actual.
     """
     serializer_class = ProductoSerializer
+    
+    @property
+    def allowed_methods(self):
+        return ['GET']
 
     def get_queryset(self):
         first_day_of_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)

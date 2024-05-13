@@ -133,8 +133,7 @@ class EstadoPagoPostSerializer(serializers.ModelSerializer):
         model = EstadoPago
         fields = ['nombre']
         
-
-
+        
 class PagoSerializer(serializers.ModelSerializer):
     pedido = PedidoSerializer()
     metodo_pago = MetodoPagoSerializer()
