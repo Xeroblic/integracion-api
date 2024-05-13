@@ -21,7 +21,7 @@ urlpatterns = [
     path('pedidos/<int:pk>/', PedidoDetailView.as_view(), name='pedido-detail'),
     path('reporte_bodega/', ReporteBodegaView.as_view(), name='reporte_bodega'),
     path('reporte_productos_vendidos/', ProductosMasVendidosView.as_view(), name='reporte_productos_vendidos'),
-    #TODO: Agregar los endpoints para la generación de reportes
-    path('iniciar_pago/', iniciar_pago, name='iniciar_pago'),
-    path('retorno/', retorno, name='retorno'),
+    #TODO: Reporte de ventas, basados en transacciones.
+    path('payment/<int:pedido_id>/', payment, name='payment'),
+    path('verify_transaction', verify_transaction, name='verify_transaction'),
 ]

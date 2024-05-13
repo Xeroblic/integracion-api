@@ -62,17 +62,18 @@ class DetallePedido(models.Model):
         unique_together = (('pedido', 'producto'),)
 
 class MetodoPago(models.Model):
-    id_metodo_pago = models.AutoField(primary_key=True)
+    id_metodo_pago = models.CharField(max_length=50,primary_key=True)
     nombre = models.CharField(max_length=50)
+    descripcion = models.CharField(max_length=1000, null=True)
+    
     def __str__(self):
         return self.nombre
 
 class EstadoPago(models.Model):
-    id_estado_pago = models.AutoField(primary_key=True)
+    id_estado_pago = models.IntegerField(primary_key=True)
     nombre = models.CharField(max_length=50)
     def __str__(self):
         return self.nombre
-
 
 class Pago(models.Model):
     id_pago = models.AutoField(primary_key=True)
@@ -80,12 +81,12 @@ class Pago(models.Model):
     metodo_pago = models.ForeignKey(MetodoPago, on_delete=models.CASCADE, null=False)
     estado_pago = models.ForeignKey(EstadoPago, on_delete=models.CASCADE, null=False)
     monto = models.IntegerField()
-    fecha = models.DateField(auto_now_add=True)
+    fecha = models.DateField()
 
 class Transaccion(models.Model):
-    id_transaccion = models.AutoField(primary_key=True)
+    id_transaccion = models.IntegerField(primary_key=True)
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, null=False)
     cliente = models.ForeignKey(UsuarioPersonalizado, on_delete=models.CASCADE, null=False)
     pago = models.ForeignKey(Pago, on_delete=models.CASCADE, null=False)
-    fecha = models.DateField(auto_now_add=True)
+    
     

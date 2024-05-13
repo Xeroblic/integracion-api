@@ -132,6 +132,8 @@ class EstadoPagoPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = EstadoPago
         fields = ['nombre']
+        
+
 
 class PagoSerializer(serializers.ModelSerializer):
     pedido = PedidoSerializer()
@@ -147,7 +149,7 @@ class PagoPostSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Pago
-        fields = ['pedido', 'fecha', 'metodo_pago', 'estado_pago']
+        fields = ['pedido', 'metodo_pago', 'estado_pago', 'monto', 'fecha']
 
 class TransaccionSerializer(serializers.ModelSerializer):
     pedido = PedidoSerializer()
@@ -159,8 +161,6 @@ class TransaccionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TransaccionPostSerializer(serializers.ModelSerializer):
-    fecha = serializers.DateField(required=True)
-    
     class Meta:
         model = Transaccion
-        fields = ['pedido', 'cliente', 'pago', 'fecha']
+        fields = ['pedido', 'cliente', 'pago']

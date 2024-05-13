@@ -1,0 +1,34 @@
+metodo_pago:
+INSERT INTO core_metodopago (id_metodo_pago, nombre, descripcion) 
+VALUES 
+    ('VP', 'Venta Prepago', 'Pago con tarjeta de débito Redcompra.'),
+    ('VD', 'Venta Débito Redcompra', 'Pago con tarjeta de débito Redcompra.'),
+    ('VN', 'Venta Normal', 'Pago en 1 cuota.'),
+    ('S2', '2 Cuotas sin interés', 'El comercio recibe el pago en 2 cuotas iguales sin interés.'),
+    ('SI', '3 Cuotas sin interés', 'El comercio recibe el pago en 3 cuotas iguales sin interés.'),
+    ('NC', 'N Cuotas sin interés', 'El comercio recibe el pago en un número de cuotas iguales y sin interés que el tarjetahabiente puede elegir de entre un rango de 2 y N (el valor N es definido por el comercio y no puede ser superior a 12)'),
+    ('VC', 'Cuotas normales', 'El emisor ofrece al tarjetahabiente entre 2 y 48 cuotas. El emisor define si son sin interés (si ha establecido un rango de cuotas en promoción) o con interés. El emisor también puede ofrecer de 1 hasta 3 meses de pago diferida. Todo esto sin impacto para el comercio que en esta modalidad de cuotas siempre recibe el pago en 48 horas hábiles.');
+
+estado_pago:
+INSERT INTO core_estadopago (id_estado_pago, nombre) 
+VALUES 
+    (-1, 'Rechazo - Error en Transacción'),
+    (-2, 'Rechazo - Se produjo fallo al procesar la transacción, este mensaje de rechazo se encuentra relacionado a parámetros de la tarjeta y/o su cuenta asociada'),
+    (-3, 'Rechazo - Error en Transacción'),
+    (-4, 'Rechazo - Rechazada por parte del emisor'),
+    (-5, 'Rechazo - Transacción con riesgo de posible fraude'),
+    (0, 'Aceptada');
+
+productos:
+INSERT INTO core_producto (sku, marca, nombre, precio_neto, fecha, stock, imagen_url) 
+VALUES 
+    ('FER001', 'Sodimac', 'Taladro percutor', 45000, CURRENT_DATE, 15, 'https://example.com/taladro.jpg'),
+    ('FER002', 'Bosch', 'Amoladora angular', 56000, CURRENT_DATE, 8, 'https://example.com/amoladora.jpg'),
+    ('FER003', 'Truper', 'Juego de destornilladores', 18000, CURRENT_DATE, 20, 'https://example.com/destornilladores.jpg'),
+    ('FER004', 'Black & Decker', 'Sierra caladora', 38000, CURRENT_DATE, 0, 'https://example.com/sierra_caladora.jpg'),
+    ('FER005', 'Stanley', 'Caja de herramientas', 75000, CURRENT_DATE, 5, 'https://example.com/caja_herramientas.jpg'),
+    ('FER006', 'DeWalt', 'Martillo percutor', 32000, CURRENT_DATE, 12, 'https://example.com/martillo.jpg'),
+    ('FER007', 'Makita', 'Sierra circular', 68000, CURRENT_DATE, 6, 'https://example.com/sierra_circular.jpg'),
+    ('FER008', 'Bellota', 'Alicate ajustable', 22000, CURRENT_DATE, 18, 'https://example.com/alicate.jpg'),
+    ('FER009', 'Husqvarna', 'Motosierra a gasolina', 95000, CURRENT_DATE, 3, 'https://example.com/motosierra.jpg'),
+    ('FER010', 'Ferrari', 'Taladro inalámbrico', 89000, CURRENT_DATE, 10, 'https://example.com/taladro_inalambrico.jpg');

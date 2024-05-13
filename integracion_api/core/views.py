@@ -1,5 +1,8 @@
-from django.http import HttpResponse
+import random
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
+from django.urls import reverse
+import requests
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework import viewsets
@@ -17,8 +20,10 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework import generics
 from django.utils import timezone
 from django.db.models import Sum, Count
-from django.shortcuts import redirect
-from .transbank import iniciar_transaccion, obtener_resultado, obtener_estado
+from django.views.decorators.csrf import csrf_exempt
+from datetime import datetime
+
+
 
 #obtener token si un usuario existe, si no le crea uno
 class ObtainTokenView(APIView):
@@ -219,21 +224,86 @@ class ProductosMasVendidosView(generics.ListAPIView):
             'productos_mas_vendidos_este_mes': productos_serializados
         })
 
+def payment(request, pedido_id):
+    pedido = Pedido.objects.get(id_pedido=pedido_id)
+    
+    #comprobar si existe un pago para el pedido
+    if Pago.objects.filter(pedido=pedido).exists():
+        return HttpResponse('Este pedido ya tiene un pago asociado.', status=400)
 
-def iniciar_pago(request):
-    monto = 10000  # Aquí debes poner el monto que deseas cobrar
-    metodo_pago = "webpay"  # Aquí debes poner el método de pago que deseas usar
-    response = iniciar_transaccion(monto, metodo_pago)
-    if 'url' in response:
-        return redirect(response["url"])
+    # Preparas los parámetros para la API
+    params = {
+        "buy_order": str(pedido.id_pedido),
+        "session_id": str(random.randint(100000, 999999)),
+        "amount": pedido.total,
+        "return_url": "http://127.0.0.1:8000/verify_transaction"
+    }
+    
+    headers = {
+        "Tbk-Api-Key-Id": "597055555532",
+        "Tbk-Api-Key-Secret": "579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C",
+        "Content-Type": "application/json"
+    }
+
+    # Haces la llamada a la API
+    response = requests.post('https://webpay3gint.transbank.cl/rswebpaytransaction/api/webpay/v1.2/transactions', headers=headers, json=params)
+
+    # Si la respuesta es exitosa, obtienes el token y renderizas la página de pago
+    if response.status_code == 200:
+        token = response.json()['token']
+        return render(request, 'payment.html', {'token': token, 'message': 'Proceder al pago', 'submit': 'Pagar'})
     else:
-        return HttpResponse("Error al iniciar la transacción: " + response.get('error_message', 'No se proporcionó ningún mensaje de error'))
+        print(response.text)
+        return HttpResponseBadRequest()
 
-def retorno(request):
-    token = request.GET.get("token_ws")
-    resultado = obtener_resultado(token)
-    estado = obtener_estado(token)
-    # Aquí puedes procesar el resultado y el estado como desees
-    return HttpResponse("Transacción completada")
+@csrf_exempt
+def verify_transaction(request):
+    if request.method == 'POST':
+        response = request.POST
 
+        return render(request, 'response.html', {'response': response})
+    elif request.method == 'GET':
+        # Capturas el token de la URL
+        token = request.GET.get('token_ws')
+
+        url = f"https://webpay3gint.transbank.cl/rswebpaytransaction/api/webpay/v1.2/transactions/{token}"
+        headers = {
+            "Tbk-Api-Key-Id": "597055555532",
+            "Tbk-Api-Key-Secret": "579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.put(url, headers=headers)
+        
+        # Crear un pago
+        response_data = response.json()
+        pago_data = {
+            'pedido': response_data['buy_order'],
+            'metodo_pago': response_data['payment_type_code'],
+            'monto': response_data['amount'],
+            'estado_pago': response_data['response_code'],
+            'fecha' : datetime.strptime(response_data['transaction_date'], '%Y-%m-%dT%H:%M:%S.%fZ').date()
+        }
+        serializer = PagoPostSerializer(data=pago_data)
+        if serializer.is_valid():
+            pago = serializer.save()
+        else:
+            return HttpResponseBadRequest(serializer.errors)
+
+        #crear la transaccion
+        transaccion_data = {
+            'pedido': pago.pedido.id_pedido,
+            'cliente': pago.pedido.usuario.id,
+            'pago': pago.id_pago,
+        }
+        transaccion_serializer = TransaccionPostSerializer(data=transaccion_data)
+        if transaccion_serializer.is_valid():
+            transaccion_serializer.save()
+        else:
+            print(transaccion_serializer.errors)
+            raise serializers.ValidationError(transaccion_serializer.errors)
+        
+        return render(request, 'response.html', {'data': pago_data})
+    else:
+        return HttpResponseBadRequest()
 
