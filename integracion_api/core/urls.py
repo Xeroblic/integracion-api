@@ -24,4 +24,5 @@ urlpatterns = [
     #TODO: Reporte estrategia de ventas y promociones
     path('payment/<int:pedido_id>/', payment, name='payment'),
     path('verify_transaction', verify_transaction, name='verify_transaction'),
+    path('reporte_estrategia_ventas/', reporteEstrategiasYVentasView.as_view(), name='reporte_estrategia_ventas'),
 ]

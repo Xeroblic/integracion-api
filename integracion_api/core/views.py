@@ -320,3 +320,51 @@ def verify_transaction(request):
     else:
         return HttpResponseBadRequest()
 
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+class reporteEstrategiasYVentasView(generics.ListAPIView):
+    """
+    Vista para obtener los productos que no se han vendido en el mes actual.
+    """
+    serializer_class = ProductoSerializer
+
+    @property
+    def allowed_methods(self):
+        return ['GET']
+
+    def get_queryset(self):
+        first_day_of_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        # Obtener los productos vendidos este mes
+        productos_vendidos_este_mes = DetallePedido.objects.filter(pedido__fecha__gte=first_day_of_month).values('producto').annotate(ventas=Count('producto'))
+
+        # Crear un diccionario con los productos vendidos y sus ventas
+        ventas_productos = {item['producto']: item['ventas'] for item in productos_vendidos_este_mes}
+
+        # Obtener todos los productos
+        todos_los_productos = Producto.objects.all()
+
+        # Agregar el conteo de ventas a cada producto
+        for producto in todos_los_productos:
+            producto.ventas = ventas_productos.get(producto.id_producto, 0)
+
+        # Filtrar los productos que no se han vendido este mes
+        productos_no_vendidos_este_mes = [producto for producto in todos_los_productos if producto.ventas == 0]
+
+        return productos_no_vendidos_este_mes
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Serializar los productos
+        productos_serializados = []
+        for producto in queryset:
+            serializer = self.get_serializer(producto)
+            producto_serializado = serializer.data
+            producto_serializado['ventas'] = producto.ventas
+            productos_serializados.append(producto_serializado)
+
+        return Response({
+            'productos_sin_ventas': productos_serializados
+        })
+
