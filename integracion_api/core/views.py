@@ -1,7 +1,6 @@
 import random
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import render
-from django.urls import reverse
 import requests
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -12,7 +11,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.contrib.auth import authenticate, login
 from rest_framework import status
-from django.contrib.auth.decorators import login_required
 from rest_framework.authtoken.models import Token
 from base64 import b64decode
 from rest_framework.permissions import IsAuthenticated
