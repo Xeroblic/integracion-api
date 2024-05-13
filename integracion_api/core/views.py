@@ -314,10 +314,9 @@ def verify_transaction(request):
         if transaccion_serializer.is_valid():
             transaccion_serializer.save()
         else:
-            print(transaccion_serializer.errors)
             raise serializers.ValidationError(transaccion_serializer.errors)
         
-        return render(request, 'response.html', {'data': pago_data})
+        return render(request, 'response.html', {'response': 'Pago exitoso.'})
     else:
         return HttpResponseBadRequest()
 
