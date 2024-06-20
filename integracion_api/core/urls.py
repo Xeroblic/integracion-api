@@ -4,7 +4,7 @@ from core.views import *
 from core.serializers import *
 
 router = routers.DefaultRouter()
-router.register('usuario', userViewSet)
+router.register('usuario', userViewSet, basename='usuario')
 router.register('tipo_usuario', tipoUsuarioViewSet)
 router.register('producto', productoViewSet)
 router.register('pedido', pedidoViewSet)

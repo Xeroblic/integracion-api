@@ -30,8 +30,9 @@ class ObtainTokenView(APIView):
             return Response({'error': 'Falta el encabezado de autorización'},
                             status=status.HTTP_400_BAD_REQUEST)
         try:
-            auth_type, auth_string = auth_header.split(' ')
-            username, password = b64decode(auth_string).decode('utf-8').split(':')
+            auth_type, auth_token = auth_header.split(' ')
+            auth_string = b64decode(auth_token).decode('utf-8')
+            username, password = auth_string.split(':')
         except ValueError:
             return Response({'error': 'Encabezado de autorización inválido'},
                             status=status.HTTP_401_UNAUTHORIZED)
