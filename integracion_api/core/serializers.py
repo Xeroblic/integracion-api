@@ -9,7 +9,7 @@ class TipoUsuarioSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class UserSerializer(serializers.ModelSerializer):
-    # id_tipo_usuario = TipoUsuarioSerializer(required=True)
+    id_tipo_usuario = serializers.PrimaryKeyRelatedField(queryset=TipoUsuario.objects.all())
     class Meta:
         model = UsuarioPersonalizado
         fields = ['id', 'username', 'email', 'password', 'id_tipo_usuario']
