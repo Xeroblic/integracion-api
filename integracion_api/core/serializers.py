@@ -37,6 +37,14 @@ class ProductoPostSerializer(serializers.ModelSerializer):
     stock = serializers.IntegerField(required=True)
     precio_neto = serializers.IntegerField(required=True)
     imagen_url = serializers.CharField(required=True)
+    
+    def validate(self, data):
+        cantidad = data['stock']
+
+        if cantidad < 0:
+            raise serializers.ValidationError({'message': 'Stock no puede ser negativo'})
+
+        return data
 
     class Meta:
         model = Producto

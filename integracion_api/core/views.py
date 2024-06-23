@@ -167,7 +167,7 @@ class informeVentaMensual(generics.ListAPIView):
     @property
     def allowed_methods(self):
         return ['GET']
-
+    
     def get_queryset(self):
         month = self.kwargs.get('month')
         if not 1 <= int(month) <= 12:
